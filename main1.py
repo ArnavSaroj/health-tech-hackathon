@@ -1,93 +1,103 @@
 import cv2
 import numpy as np
-import math
 import os
 import requests
+import torch
 from ultralytics import YOLO 
+from transformers import pipeline # For Motivation/Sentiment
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ----------------------------------------------------
-# 1. Configuration and Model Initialization
+# 1. CONFIGURATION AND MODEL INITIALIZATION
 # ----------------------------------------------------
-# YOLO Pose Model (downloads the first time, uses the nano model for speed)
-MODEL_NAME = "yolov8n-pose.pt"
+
+# Scoring Model (YOLOv8-Pose)
+YOLO_MODEL_NAME = "yolov8n-pose.pt"
 try:
-    pose_model = YOLO(MODEL_NAME)
+    pose_model = YOLO(YOLO_MODEL_NAME)
 except Exception as e:
-    print(f"Error loading YOLO model: {e}. Check internet connection.")
-    # Raise the error immediately to prevent the server from starting with a broken model
+    print(f"Error loading YOLO model: {e}")
     raise
 
-# Thresholds for Squat Counting (Degrees)
+# Motivation Model (Sentiment Analysis for user mood)
+# Using 'distilbert-base-uncased-finetuned-sst-2-english' - fast and accurate for positive/negative classification
+try:
+    sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+except Exception as e:
+    print(f"Error loading Sentiment Model: {e}")
+    # Still allow the server to run if the scoring part is the priority
+    sentiment_analyzer = None 
+
+# Scoring Thresholds
 DOWN_THRESHOLD = 100 
 UP_THRESHOLD = 160   
 
 # ----------------------------------------------------
-# 2. Pydantic Models (The API Contract with MERN)
+# 2. Pydantic Models (The MERN Contract)
 # ----------------------------------------------------
 
+# --- A. Scoring Input/Output ---
 class ExerciseInput(BaseModel):
-    """
-    Input model: Data sent from the MERN backend to this FastAPI service.
-    Note: The MERN app should handle file storage (S3/IPFS) and send the URL.
-    """
     user_id: str
     media_url: str
     exercise_type: str = "squat" 
     
 class ScoringOutput(BaseModel):
-    """
-    Output model: Standardized JSON response returned to the MERN backend.
-    """
     user_id: str
     score: int
     message: str
     valid: bool
     reps_counted: int
 
-# ----------------------------------------------------
-# 3. FastAPI Setup and CORS Configuration
-# ----------------------------------------------------
-app = FastAPI(title="YOLO AI Fitness Scorer", version="1.0.1")
+# --- B. Motivation Input/Output ---
+class MotivationInput(BaseModel):
+    user_id: str
+    last_score: int          # The score from the last exercise (0-100)
+    user_mood_text: str      # Text input from user (e.g., "I feel lazy today")
+    recent_activity_level: str # e.g., "High", "Low", "Consistent"
 
-# Configure CORS: ESSENTIAL for cross-origin communication with the Node.js server
-# Replace "http://localhost:3000" with the actual address of your MERN frontend/backend server in production
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+class MotivationOutput(BaseModel):
+    user_id: str
+    motivational_message: str
+    tone: str # e.g., "Empathetic", "Challenging", "Encouraging"
 
+# ----------------------------------------------------
+# 3. FastAPI Setup and Utility Functions
+# ----------------------------------------------------
+
+app = FastAPI(title="AI Fitness Coaching Microservice", version="2.0")
+
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allowing all origins for simple testing/development
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ----------------------------------------------------
-# 4. Core Calculation Functions
-# ----------------------------------------------------
-
 def calculate_angle(a, b, c):
-    """Calculates the angle (in degrees) between three 2D points (NumPy)."""
+    """Calculates the angle (in degrees) between three 2D points."""
     a = np.array(a); b = np.array(b); c = np.array(c)
     radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
     angle = np.abs(radians * 180.0 / np.pi)
     if angle > 180.0: angle = 360 - angle
     return angle
 
+# ----------------------------------------------------
+# 4. ENDPOINT 1: AI SCORING LOGIC (/score_exercise)
+# ----------------------------------------------------
+
 def process_media_for_score(media_url: str, user_id: str) -> dict:
-    """Handles media download, YOLO processing, and scoring."""
-    temp_file_name = f"temp_{user_id}_{os.path.basename(media_url)}"
+    """Handles media download, YOLO processing, and squat scoring."""
+    temp_file_name = f"temp_score_{user_id}_{os.path.basename(media_url)}"
     
-    # 1. Download Media File
+    # --- File Download Logic ---
     try:
-        # Stream the file content and save it locally for OpenCV to read
         response = requests.get(media_url, stream=True)
-        response.raise_for_status() # Raise exception for bad status codes (4xx or 5xx)
+        response.raise_for_status()
         with open(temp_file_name, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
@@ -98,11 +108,10 @@ def process_media_for_score(media_url: str, user_id: str) -> dict:
 
     except Exception as e:
         if os.path.exists(temp_file_name): os.remove(temp_file_name)
-        raise HTTPException(status_code=400, detail=f"Failed to download/open media from URL: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to download/open media: {e}")
 
-    # 2. YOLO Processing and Scoring Logic
+    # --- YOLO Processing and Scoring Logic (Squat) ---
     rep_counter = 0; stage = "up"; max_depth_score = 0
-    
     try:
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         
@@ -110,19 +119,16 @@ def process_media_for_score(media_url: str, user_id: str) -> dict:
             success, image = cap.read()
             if not success: break
             
-            # Flip image for side view analysis if required by your data
-            image = cv2.flip(image, 1) 
             results = pose_model(image, verbose=False, show=False) 
-
+            
             if results and results[0].keypoints.xyn.shape[1] > 0:
                 keypoints_array = results[0].keypoints.xyn.cpu().numpy()[0]
                 
-                # Use YOLO keypoints: 6=Hip, 8=Knee, 10=Ankle (Right Side)
+                # YOLO Keypoints: 6=Hip, 8=Knee, 10=Ankle (Right Side)
                 hip = keypoints_array[6]; knee = keypoints_array[8]; ankle = keypoints_array[10]
-                
                 knee_angle = calculate_angle(hip, knee, ankle)
                 
-                # Squat Logic
+                # Squat Rep/Depth Logic
                 if knee_angle < DOWN_THRESHOLD:
                     stage = "down"
                     max_depth_score = max(max_depth_score, DOWN_THRESHOLD - knee_angle) 
@@ -133,46 +139,87 @@ def process_media_for_score(media_url: str, user_id: str) -> dict:
             
         cap.release()
 
-        # 3. Final Score Calculation
+        # Final Score Calculation
         final_score = min(100, (rep_counter * 10) + int(max_depth_score * 2))
         
         if rep_counter >= 3 and final_score >= 80:
-            return {"score": final_score, "message": f"Excellent! {rep_counter} reps, Score: {final_score}.", "valid": True, "reps_counted": rep_counter}
+            msg = f"Excellent! {rep_counter} quality reps, Score: {final_score}."
+            return {"score": final_score, "message": msg, "valid": True, "reps_counted": rep_counter}
         else:
-            return {"score": final_score, "message": f"Needs more depth or reps. Reps: {rep_counter}.", "valid": False, "reps_counted": rep_counter}
+            msg = f"Needs depth/reps. Reps: {rep_counter}. Max depth points: {int(max_depth_score * 2)}."
+            return {"score": final_score, "message": msg, "valid": False, "reps_counted": rep_counter}
 
-    except IndexError:
-        raise HTTPException(status_code=422, detail="Pose estimation failed. User not visible or media too low quality.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal processing error: {e}")
         
     finally:
-        # Guarantee removal of the downloaded file
-        if os.path.exists(temp_file_name):
-            os.remove(temp_file_name)
+        if os.path.exists(temp_file_name): os.remove(temp_file_name)
 
-
-# ----------------------------------------------------
-# 5. API Endpoint (The Integration Point)
-# ----------------------------------------------------
 
 @app.post("/score_exercise", response_model=ScoringOutput)
 def score_exercise_endpoint(input_data: ExerciseInput):
-    """
-    Receives JSON from the MERN backend, processes the exercise media, and returns the score.
-    """
-    # 1. Basic Input Validation
+    """Processes exercise media and returns the score for staking/rewards."""
     if not input_data.media_url.startswith("http"):
         raise HTTPException(status_code=400, detail="media_url must be a valid HTTP/HTTPS link.")
     
-    # 2. Run the Core Logic
-    # The process_media_for_score function handles all exceptions internally
     result = process_media_for_score(input_data.media_url, input_data.user_id)
-    
-    # 3. Return the Standardized Output
     return ScoringOutput(user_id=input_data.user_id, **result)
+
+
+# ----------------------------------------------------
+# 5. ENDPOINT 2: AI PERSONALIZATION LOGIC (/generate_motivation)
+# ----------------------------------------------------
+
+@app.post("/generate_motivation", response_model=MotivationOutput)
+def generate_motivation_endpoint(input_data: MotivationInput):
+    """Generates a personalized motivational message based on user data."""
+    if not sentiment_analyzer:
+        raise HTTPException(status_code=503, detail="Motivation model is not loaded.")
+
+    # 1. Emotional Context (NLP)
+    sentiment_result = sentiment_analyzer(input_data.user_mood_text)[0]
+    is_positive = sentiment_result['label'] == 'POSITIVE'
+    
+    # 2. Contextual Logic (Rule Engine)
+    score = input_data.last_score
+    activity = input_data.recent_activity_level.lower()
+    
+    # Default message and tone
+    tone = "Encouraging"
+    message = "Great to see you here! Consistency is the key to all progress."
+
+    # --- Rule Set 1: Low Score / Negative Mood ---
+    if score < 70 and not is_positive:
+        tone = "Empathetic"
+        message = (f"It's alright to feel discouraged after a score of {score}. "
+                   "A champion's secret is showing up even when you don't feel like it. "
+                   "Focus on just one perfect rep today.")
+
+    # --- Rule Set 2: High Score / Consistent Activity ---
+    elif score >= 90 and activity == 'consistent':
+        tone = "Challenging"
+        message = (f"Awesome consistency! You crushed it with {score}. "
+                   "Now, what's the next goal? Time to increase the challenge.")
+
+    # --- Rule Set 3: High Score / Low Activity (Needs a push) ---
+    elif score >= 80 and activity == 'low':
+        tone = "Aspirational"
+        message = (f"That {score} shows you have the skill! Don't let that talent go to waste. "
+                   "A small habit breakthrough this week will change everything.")
+    
+    # --- Rule Set 4: Low Score / Positive Mood (Needs correction) ---
+    elif score < 70 and is_positive:
+        tone = "Technical"
+        message = (f"Your attitude is perfect! Now let's match that effort with form. "
+                   "Remember to focus on getting that knee angle below 90 degrees for max depth.")
+        
+    return MotivationOutput(
+        user_id=input_data.user_id,
+        motivational_message=message,
+        tone=tone
+    )
 
 # ----------------------------------------------------
 # Execution
-# Run in terminal: uvicorn main:app --reload
+# Run in terminal: uvicorn ai_full_service:app --reload
 # ----------------------------------------------------
