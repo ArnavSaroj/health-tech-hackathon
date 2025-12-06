@@ -4,7 +4,7 @@ const utcNow = new Date().toISOString();
 
 export const addProfile = async (req, res) => {
   try {
-    const { user_id, fullname, age, height, weight, gender } = req.body();
+    const { user_id, fullname, age, height, weight, gender } = req.body;
 
     if (!user_id || !fullname || !age || !height || !weight || !gender) {
       return res.status(500).json({ error: "req.body missing" });
@@ -12,7 +12,7 @@ export const addProfile = async (req, res) => {
 
     const { data, error } = await supabaseBackend.from("profiles").insert({
       id: user_id,
-      fullname,
+      full_name:fullname,
       age: age,
       gender: gender,
       created_at: utcNow,

@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { supabaseBackend } from "./config/supabase.js";
 import mainRoutes from './routes/mainRoutes.js'
+import oracleRoutes from './routes/oracleRoutes.js'
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ const checkSupabase = async (req, res) => {
 };
 
 app.use("/api", mainRoutes);
+app.use("/api",oracleRoutes);
 
 const PORT = process.env.PORT || 5000;
 
