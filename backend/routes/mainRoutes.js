@@ -1,5 +1,5 @@
 import express from 'express'
-import { addProfile, showProfile, updatePoints } from '../controllers/profile.js';
+import { addProfile, showProfile, updatePoints,checkProfile } from '../controllers/profile.js';
 import { addFood, getFood, getTodayFood } from '../controllers/food.js';
 import verifyDay from '../controllers/verify.js';
 
@@ -10,6 +10,7 @@ const router = express.Router();
 router.post("/addProfile", addProfile);
 router.get("/profile:id", showProfile)
 router.post("/updatePoints", updatePoints);
+router.get("/checkProfile/:id", checkProfile);
 
 // NOTE these are the food routes
 router.get("/food/getFood:user_id", getFood);
