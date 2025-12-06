@@ -1,0 +1,412 @@
+/* FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-black: #000000;
+  --logo-green: #558b2f; /* Extracted from your logo */
+  --logo-blue: #1565c0;  /* Extracted from your logo */
+  --text-white: #ffffff;
+  --border-color: #333333;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-black);
+  color: var(--text-white);
+}
+
+/* SHELL - This handles the main gradient background */
+.stock-theme-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* Gradient Logic:
+     0% to 50%: Pure Black (Top of screen)
+     100%: Mix of the Blue and Green from logo (Bottom of screen)
+  */
+  background: linear-gradient(
+    to bottom, 
+    #000000 0%, 
+    #000000 40%, 
+    #0d2339 80%, 
+    #1b3e2b 100%
+  );
+}
+
+/* --- NAVBAR --- */
+.stock-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: rgba(0, 0, 0, 0.95); /* Mostly black */
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(5px);
+}
+
+.nav-brand-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-logo {
+  height: 40px; /* Adjust size based on your preference */
+  width: auto;
+  border-radius: 50%; /* Makes logo circular if square image */
+  border: 2px solid var(--logo-green);
+}
+
+.nav-brand {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.nav-center {
+  display: flex;
+  gap: 15px;
+}
+
+.nav-pill-btn {
+  background: #000;
+  color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 20px; /* Pill shape */
+  padding: 8px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-pill-btn:hover {
+  border-color: var(--logo-green);
+  color: var(--logo-green);
+}
+
+.nav-blue-btn {
+  background-color: var(--logo-blue);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.nav-blue-btn:hover {
+  background-color: #0d47a1; /* Darker blue on hover */
+  transform: translateY(-1px);
+}
+
+/* --- TICKER --- */
+.ticker-bar {
+  background-color: #000;
+  padding: 10px 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ticker-track {
+  display: inline-flex;
+  gap: 50px;
+  animation: scrollTicker 30s linear infinite;
+  white-space: nowrap;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.ticker-symbol { color: #888; }
+.ticker-val.down { color: #ef5350; } 
+.ticker-val.up { color: #66bb6a; }
+
+/* --- HERO --- */
+.stock-hero {
+  padding: 80px 20px 40px; /* Adjusted padding */
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  /* Transparent background to let the body gradient show through */
+  background: transparent; 
+}
+
+.hero-content {
+  max-width: 900px;
+}
+
+.hero-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--logo-green);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.hero-title {
+  font-size: 64px;
+  line-height: 1.1;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 30px;
+  color: #fff;
+}
+
+/* Use specific logo colors for accents */
+.text-accent-blue { 
+  color: var(--logo-blue);
+  text-shadow: 0 0 20px rgba(21, 101, 192, 0.5); /* Glow */
+}
+.text-accent-green { 
+  color: var(--logo-green);
+  text-shadow: 0 0 20px rgba(85, 139, 47, 0.5); /* Glow */
+}
+
+.hero-subtitle {
+  font-size: 18px;
+  color: #bbb;
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 50px;
+}
+
+.wallet-btn {
+  background-color: #fff;
+  color: #000;
+  border: none;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wallet-btn:hover {
+  transform: translateY(-2px);
+  background-color: var(--logo-green); 
+  color: white;
+  box-shadow: 0 0 20px rgba(85, 139, 47, 0.6);
+}
+
+.ghost-btn {
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ghost-btn:hover {
+  border-color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+.hero-meta-row {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #777;
+  text-transform: uppercase;
+}
+
+/* --- AUTH SECTION --- */
+.stock-auth-section {
+  padding: 80px 20px;
+  /* Transparent so the blue/green gradient at bottom shows */
+  background: transparent; 
+  position: relative;
+}
+
+.stock-auth-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.stock-auth-header h2 {
+  font-size: 36px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.stock-auth-header p {
+  color: #aaa;
+}
+
+.stock-auth-grid {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stock-card {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(10, 10, 10, 0.8); /* Semi-transparent black card */
+  border: 1px solid #333;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.stock-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--logo-blue);
+}
+
+/* Top accent line on cards */
+.stock-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--logo-blue), var(--logo-green));
+}
+
+.card-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.card-body {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-body p {
+  color: #bbb;
+  font-size: 14px;
+}
+
+.stock-list {
+  list-style: none;
+}
+
+.stock-list li {
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #ddd;
+  font-size: 14px;
+}
+
+.card-btn {
+  text-align: center;
+  padding: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  text-transform: uppercase;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: block;
+}
+
+.card-btn.primary {
+  background: var(--logo-green);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.card-btn.primary:hover {
+  background: #4caf50; /* Slightly brighter green */
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
+.card-btn.outline {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+.card-btn.outline:hover {
+  border-color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .stock-nav {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+  .nav-center { display: none; }
+  
+  .hero-title { font-size: 42px; }
+  
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .wallet-btn, .ghost-btn {
+    width: 100%;
+  }
+}
+
+@keyframes scrollTicker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

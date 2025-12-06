@@ -1,0 +1,139 @@
+/* StakeFit.css */
+
+.stakefit-page {
+  background-color: #121212;
+  min-height: 100vh;
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.stakefit-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 50px;
+}
+
+/* Setup Card Styling */
+.setup-card {
+  background-color: #1e1e1e;
+  width: 100%;
+  max-width: 450px;
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid #333;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.setup-title {
+  margin: 0;
+  color: #fff;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.setup-subtitle {
+  text-align: center;
+  color: #888;
+  margin-bottom: 30px;
+  font-size: 0.9rem;
+}
+
+/* Form Elements */
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.form-group label {
+  color: #00bcd4; /* Accent color */
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stake-input {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.stake-input:focus {
+  border-color: #00bcd4;
+}
+
+/* Summary Box */
+.stake-summary {
+  background: rgba(0, 188, 212, 0.1);
+  border: 1px solid #00bcd4;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.summary-value {
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Buttons */
+.stake-btn-primary {
+  background-color: #00bcd4;
+  color: #121212;
+  border: none;
+  padding: 15px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: transform 0.2s;
+}
+
+.stake-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 188, 212, 0.3);
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.back-btn:hover {
+  color: #fff;
+}
