@@ -1,0 +1,49 @@
+[
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_days", "type": "uint256" }
+    ],
+    "name": "startChallenge",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_user", "type": "address" },
+      { "internalType": "bool", "name": "_isValid", "type": "bool" }
+    ],
+    "name": "verifyDay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "claimResult",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawTreasury",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "challenges",
+    "outputs": [
+      { "internalType": "uint256", "name": "stakeAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "daysRequired", "type": "uint256" },
+      { "internalType": "uint256", "name": "daysCompleted", "type": "uint256" },
+      { "internalType": "bool", "name": "isActive", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
