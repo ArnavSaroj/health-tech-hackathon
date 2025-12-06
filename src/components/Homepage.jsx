@@ -384,7 +384,7 @@ const Homepage = () => {
         
         <div className="nav-center">
           <button className="nav-pill-btn" onClick={scrollToAuth}>Start</button>
-          <button className="nav-pill-btn">Features</button>
+          
         </div>
 
         <div className="nav-right">
