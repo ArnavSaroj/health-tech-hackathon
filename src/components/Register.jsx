@@ -166,70 +166,110 @@ const Register = () => {
   // Profile fields
   const [fullname, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [user_id, setUser_id]=useState("");
+  const [userId, setUserId]=useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
 
   // Load user on page load
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+useEffect(() => {
+  const fetchUser = async () => {
+    const { data, error } = await supabase.auth.getUser();
 
-      if (error || !data.user) {
-        // No logged-in user → send back to login
-        navigate("/login");
-        return;
-      }
-
-      const supaUser = data.user;
-      console.log(supaUser);
-      setUser(supaUser);
-
-      // Auto-fill email + Google name
-      setEmail(supaUser.email || "");
-
-      // Supabase stores Google name in user.user_metadata.full_name
-      setFullName(supaUser.user_metadata.full_name || "");
-      setUser_id(supaUser.id);
-
-    };
-
-    fetchUser();
-  }, []);
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-
-    if (!user) return;
-
-    try {
-      const res = await fetch("http://localhost:5000/api/addProfile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id:user_id,
-          fullname,
-          age,
-          height,
-          weight,
-          gender,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.ok) {
-        alert("Error creating profile");
-        return;
-      }
-
-      navigate("/dashboard");
-    } catch (err) {
-      console.error("Profile creation error:", err);
+    if (error || !data.user) {
+      navigate("/login");
+      return;
     }
+
+    const supaUser = data.user;
+
+    // Check if profile exists in backend
+    const res = await fetch(`http://localhost:5000/api/checkProfile/${supaUser.id}`);
+    const result = await res.json();
+
+    if (result.profile) {
+      // User already registered → go to dashboard
+      navigate("/dashboard");
+      return;
+    }
+
+    // Otherwise, allow user to register
+    setUser(supaUser);
+    setEmail(supaUser.email || "");
+    setFullName(supaUser.user_metadata.full_name || "");
+    setUserId(supaUser.id);
   };
+
+  fetchUser();
+}, []);
+
+
+  // const handleRegister = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!user) return;
+
+  //   try {
+  //     const res = await fetch("http://localhost:5000/api/addProfile", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         user_id:userId,
+  //         fullname,
+  //         age,
+  //         gender,
+  //         height,
+  //         weight,
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!data.ok) {
+  //       alert("Error creating profile");
+  //       return;
+  //     }
+
+  //     navigate("/dashboard");
+  //   } catch (err) {
+  //     console.error("Profile creation error:", err);
+  //   }
+  // };
+  const handleRegister = async (e) => {
+  e.preventDefault();
+
+  if (!user) return;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/addProfile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        fullname,
+        age,
+        gender,
+        height,
+        weight,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      alert(data.error || "Error creating profile");
+      return;
+    }
+
+    navigate("/dashboard");
+  } catch (err) {
+    console.error("Profile creation error:", err);
+    alert("Something went wrong while creating profile");
+  }
+  navigate("/dashboard");
+};
+
 
   if (!user) return <p>Loading...</p>;
 
@@ -307,5 +347,7 @@ const Register = () => {
     </div>
   );
 };
+
+
 
 export default Register;
